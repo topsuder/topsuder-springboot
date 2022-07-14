@@ -14,6 +14,8 @@ import org.apache.catalina.startup.Tomcat;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
+import java.util.Map;
+
 /**
  * <span>Form File</span>
  * <p>Description</p>
@@ -34,47 +36,21 @@ public class TopsuderSpringApplication {
         applicationContext.register(clazz);
         applicationContext.refresh();
 
-        //启动tomcat
-        startTomcat(applicationContext);
+        WebServer webServer = getWebServer(applicationContext);
 
     }
 
-    private static void startTomcat(AnnotationConfigWebApplicationContext applicationContext) {
+    private static WebServer getWebServer(AnnotationConfigWebApplicationContext applicationContext) {
 
+        final Map<String, WebServer> beansOfType = applicationContext.getBeansOfType(WebServer.class);
 
-        Tomcat tomcat = new Tomcat();
-
-        Server server = tomcat.getServer();
-        Service service = server.findService("Tomcat");
-
-        Connector connector = new Connector();
-        connector.setPort(8081);
-
-        Engine engine = new StandardEngine();
-        engine.setDefaultHost("localhost");
-
-        Host host = new StandardHost();
-        host.setName("localhost");
-
-        String contextPath = "";
-        Context context = new StandardContext();
-        context.setPath(contextPath);
-        context.addLifecycleListener(new Tomcat.FixContextListener());
-
-        host.addChild(context);
-        engine.addChild(host);
-
-        service.setContainer(engine);
-        service.addConnector(connector);
-
-        tomcat.addServlet(contextPath, "dispatcher", new DispatcherServlet(applicationContext));
-        context.addServletMappingDecoded("/*", "dispatcher");
-
-        try {
-            tomcat.start();
-        } catch (LifecycleException e) {
-            e.printStackTrace();
+        if (beansOfType.size() == 0) {
+            throw new IllegalArgumentException("No WebServer bean found");
         }
+        if (beansOfType.size() > 1) {
+            throw new IllegalArgumentException("More than one WebServer bean found");
+        }
+        return beansOfType.values().iterator().next();
 
 
     }
