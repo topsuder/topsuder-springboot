@@ -19,6 +19,6 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     @Override
     public String test() {
-        return "测试的提供者";
+        return "test";
     }
 }
